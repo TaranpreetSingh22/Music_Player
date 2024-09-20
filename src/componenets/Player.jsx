@@ -7,11 +7,18 @@ const Player = () => {
     const [songs, setSongs] = useState([]);
     const [newSong, setNewSong] = useState({ title: '', artist: '', file: null });
     const audioRef = useRef(null);
+    const [flag,setFlag]=useState(false);
 
     const fetchSongs = async () => {
         const response = await fetch('http://localhost:5000/songs');
         const data = await response.json();
         setSongs(data);
+        if (data!=null){
+            setFlag(true);
+        }
+        else{
+            setFlag(false);
+        }
     };
 
     useEffect(() => {
@@ -87,11 +94,11 @@ const Player = () => {
             
             <h3>Song List</h3>
             <ul>
-                {songs.map((song, index) => (
+                { flag ? songs.map((song, index) => (
                     <li key={index} onClick={() => handleSongClick(index)}  className={currentSongIndex === index ? 'active' : ''}>
                         {song.title} - {song.artist}
                     </li>
-                ))}
+                )) : "No Songs Available"}
             </ul>
 
             <form onSubmit={handleUploadSubmit}>
