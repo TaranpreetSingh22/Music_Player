@@ -13,7 +13,7 @@ const Player = () => {
         const response = await fetch('http://localhost:5000/songs');
         const data = await response.json();
         setSongs(data);
-        if (data!=null){
+        if (data.status){
             setFlag(true);
         }
         else{
@@ -71,6 +71,10 @@ const Player = () => {
 
         fetchSongs(); // Refresh song list
         setNewSong({ title: '', artist: '', file: null }); // Reset form
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''; // Clear file input value
+        }
     };
 
     const handleSongClick = (index) => {
@@ -94,11 +98,11 @@ const Player = () => {
             
             <h3>Song List</h3>
             <ul>
-                { flag ? songs.map((song, index) => (
+                { songs.length>0 ? songs.map((song, index) => (
                     <li key={index} onClick={() => handleSongClick(index)}  className={currentSongIndex === index ? 'active' : ''}>
                         {song.title} - {song.artist}
                     </li>
-                )) : "No Songs Available"}
+                )) : (<li>No Songs Available</li>)}
             </ul>
 
             <form onSubmit={handleUploadSubmit}>
