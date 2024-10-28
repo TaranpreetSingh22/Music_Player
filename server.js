@@ -22,7 +22,7 @@ const __dirname = dirname(__filename);
 
 // Connect to MongoDB
 import { MongoClient, ServerApiVersion } from 'mongodb';
-const uri = "mongodb+srv://taranpreetsinghrababi:Taranpreet@musicplayer.wio36.mongodb.net/?retryWrites=true&w=majority&appName=MusicPlayer";
+const uri = "";
 let collection;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
