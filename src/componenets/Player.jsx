@@ -7,45 +7,43 @@ const Player = () => {
     const [songs, setSongs] = useState([]);
     const [newSong, setNewSong] = useState({ title: '', artist: '', file: null });
     const audioRef = useRef(null);
-    const [flag,setFlag]=useState(false);
 
     const fetchSongs = async () => {
-        const response = await fetch('http://localhost:5000/songs');
+        const response = await fetch('/songs');
         const data = await response.json();
         setSongs(data);
-        if (data.status){
-            setFlag(true);
-        }
-        else{
-            setFlag(false);
-        }
     };
 
     useEffect(() => {
         fetchSongs();
     }, []);
 
-    const playPause = () => {
-        if (isPlaying) {
-            audioRef.current.pause();
-        } else {
-            audioRef.current.play();
+    // Function to play the current song
+    const playCurrentSong = () => {
+        const currentSong = songs[currentSongIndex];
+        if (currentSong && audioRef.current) {
+            audioRef.current.src = currentSong.src; // Set the audio source
+            audioRef.current.play()
+                .then(() => setIsPlaying(true))
+                .catch((error) => console.error('Error trying to play audio:', error));
         }
-        setIsPlaying(!isPlaying);
+    };
+
+    const handleSongClick = (index) => {
+        setCurrentSongIndex(index);
+        playCurrentSong();
     };
 
     const nextSong = () => {
-        setCurrentSongIndex((prevIndex) => (prevIndex + 1) % songs.length);
-        audioRef.current.pause();
-        setIsPlaying(false);
+        const nextIndex = (currentSongIndex + 1) % songs.length;
+        setCurrentSongIndex(nextIndex);
+        playCurrentSong();
     };
 
     const previousSong = () => {
-        setCurrentSongIndex((prevIndex) => 
-            prevIndex === 0 ? songs.length - 1 : prevIndex - 1
-        );
-        audioRef.current.pause();
-        setIsPlaying(false);
+        const prevIndex = (currentSongIndex === 0) ? songs.length - 1 : currentSongIndex - 1;
+        setCurrentSongIndex(prevIndex);
+        playCurrentSong();
     };
 
     const handleUploadChange = (e) => {
@@ -64,42 +62,39 @@ const Player = () => {
         formData.append('title', newSong.title);
         formData.append('artist', newSong.artist);
 
-        await fetch('http://localhost:5000/upload', {
+        await fetch('/upload', {
             method: 'POST',
             body: formData,
         });
 
         fetchSongs(); // Refresh song list
         setNewSong({ title: '', artist: '', file: null }); // Reset form
-
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ''; // Clear file input value
-        }
-    };
-
-    const handleSongClick = (index) => {
-        setCurrentSongIndex(index);
-        setIsPlaying(true);
-        audioRef.current.play();
     };
 
     return (
         <div className="music-player">
             <h2>{songs[currentSongIndex]?.title || 'Select a song'}</h2>
             <p>{songs[currentSongIndex]?.artist || ''}</p>
-            <audio ref={audioRef} src={songs[currentSongIndex]?.src} onEnded={nextSong}></audio>
+            <audio ref={audioRef} onEnded={() => setIsPlaying(false)}></audio>
             <div className="controls">
                 <button onClick={previousSong}>&lt;&lt; Prev</button>
-                <button onClick={playPause}>
+                <button onClick={() => {
+                    if (isPlaying) {
+                        audioRef.current.pause();
+                        setIsPlaying(false);
+                    } else {
+                        playCurrentSong();
+                    }
+                }}>
                     {isPlaying ? 'Pause' : 'Play'}
                 </button>
                 <button onClick={nextSong}>Next &gt;&gt;</button>
             </div>
-            
+
             <h3>Song List</h3>
             <ul>
-                { songs.length>0 ? songs.map((song, index) => (
-                    <li key={index} onClick={() => handleSongClick(index)}  className={currentSongIndex === index ? 'active' : ''}>
+                {songs.length > 0 ? songs.map((song, index) => (
+                    <li key={index} onClick={() => handleSongClick(index)} className={currentSongIndex === index ? 'active' : ''}>
                         {song.title} - {song.artist}
                     </li>
                 )) : (<li>No Songs Available</li>)}
